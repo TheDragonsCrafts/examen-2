@@ -17,27 +17,57 @@ Sub Class_Globals
 	Private SQL1 As SQL
 	Private SpinnerPlanta As Spinner        ' WithEvents en el diseñador
 	Private EtSuperficie As EditText
-	Private ListViewProcesos As ListView
-	Private BtnGuardar As Button            ' WithEvents en el diseñador
-	'----------------------------------------------------
+        Private ListViewProcesos As ListView
+        Private BtnGuardar As Button            ' WithEvents en el diseñador
+        Private PanelColor As B4XView
+        '----------------------------------------------------
 End Sub
 
 Public Sub Initialize
-	' No es necesario inicializar nada aquí.
+        ' No es necesario inicializar nada aquí.
+End Sub
+
+Sub CreateUI
+        SpinnerPlanta.Initialize("SpinnerPlanta")
+        EtSuperficie.Initialize("")
+        ListViewProcesos.Initialize("ListViewProcesos")
+        BtnGuardar.Initialize("BtnGuardar")
+        BtnGuardar.Text = "Guardar"
+        PanelColor = xui.CreatePanel("")
+
+        ' Distribución simple
+        Dim gap As Int = 16dip
+        Dim top As Int = gap
+        Root.AddView(SpinnerPlanta, gap, top, Root.Width - 2 * gap, 40dip)
+        top = top + SpinnerPlanta.Height + gap
+
+        Dim lbl As Label
+        lbl.Initialize("")
+        lbl.Text = "Superficie (m²):"
+        Root.AddView(lbl, gap, top, 200dip, 30dip)
+        top = top + lbl.Height
+        Root.AddView(EtSuperficie, gap, top, Root.Width - 2 * gap - 60dip, 40dip)
+        PanelColor.Color = xui.Color_White
+        Root.AddView(PanelColor, Root.Width - gap - 40dip, top, 40dip, 40dip)
+
+        top = top + EtSuperficie.Height + gap
+        Root.AddView(ListViewProcesos, gap, top, Root.Width - 2 * gap, Root.Height - top - 2 * gap - 40dip)
+
+        Root.AddView(BtnGuardar, gap, Root.Height - gap - 40dip, Root.Width - 2 * gap, 40dip)
 End Sub
 
 ' ----------------------------------------------------
 ' Se dispara una sola vez cuando la página se crea.
 Private Sub B4XPage_Created (Root1 As B4XView)
 	Root = Root1
-	Root.LoadLayout("MainPage")            ' Carga MainPage.bal
+        CreateUI                                    ' Creamos la interfaz por código
 
 	' 1) EditText sólo admite decimales
 	EtSuperficie.InputType = EtSuperficie.INPUT_TYPE_DECIMAL_NUMBERS
 
 	' 2) Base de datos SQLite
 	SQL1.Initialize(File.DirInternal, "Fabrica.db", True)
-	SQL1.ExecNonQuery("CREATE TABLE IF NOT EXISTS Planta(Color TEXT PRIMARY KEY, Superficie REAL)")
+        SQL1.ExecNonQuery("CREATE TABLE IF NOT EXISTS Planta(Color TEXT PRIMARY KEY, Superficie REAL, HexColor TEXT)")
 	SQL1.ExecNonQuery("CREATE TABLE IF NOT EXISTS Proceso(PlantaColor TEXT, Nombre TEXT, Complejidad TEXT)")
 
 	' 3) Datos iniciales (sólo la primera vez)
@@ -54,34 +84,49 @@ End Sub
 
 ' Inserta 50 colores y dos procesos por cada planta
 Sub InsertDatosIniciales
-	Dim colores() As String = Array As String( _
-        "AliceBlue","AntiqueWhite","Aqua","Aquamarine","Azure", _
-        "Beige","Bisque","Black","BlanchedAlmond","Blue", _
-        "BlueViolet","Brown","BurlyWood","CadetBlue","Chartreuse", _
-        "Chocolate","Coral","CornflowerBlue","Cornsilk","Crimson", _
-        "Cyan","DarkBlue","DarkCyan","DarkGoldenRod","DarkGray", _
-        "DarkGreen","DarkKhaki","DarkMagenta","DarkOliveGreen","DarkOrange", _
-        "DarkOrchid","DarkRed","DarkSalmon","DarkSeaGreen","DarkSlateBlue", _
-        "DarkSlateGray","DarkTurquoise","DarkViolet","DeepPink","DeepSkyBlue", _
-        "DimGray","DodgerBlue","FireBrick","FloralWhite","ForestGreen", _
-        "Fuchsia","Gainsboro","GhostWhite","Gold","GoldenRod" _
-    )
+        Dim colores() As String = Array As String( _
+            "AliceBlue","AntiqueWhite","Aqua","Aquamarine","Azure", _
+            "Beige","Bisque","Black","BlanchedAlmond","Blue", _
+            "BlueViolet","Brown","BurlyWood","CadetBlue","Chartreuse", _
+            "Chocolate","Coral","CornflowerBlue","Cornsilk","Crimson", _
+            "Cyan","DarkBlue","DarkCyan","DarkGoldenRod","DarkGray", _
+            "DarkGreen","DarkKhaki","DarkMagenta","DarkOliveGreen","DarkOrange", _
+            "DarkOrchid","DarkRed","DarkSalmon","DarkSeaGreen","DarkSlateBlue", _
+            "DarkSlateGray","DarkTurquoise","DarkViolet","DeepPink","DeepSkyBlue", _
+            "DimGray","DodgerBlue","FireBrick","FloralWhite","ForestGreen", _
+            "Fuchsia","Gainsboro","GhostWhite","Gold","GoldenRod" _
+        )
 
-	SQL1.BeginTransaction
-	Try
-		For Each c As String In colores
-			SQL1.ExecNonQuery2("INSERT OR IGNORE INTO Planta(Color,Superficie) VALUES(?,?)", _
-                Array As Object(c, 100 + Rnd(0, 901)))
-			SQL1.ExecNonQuery2("INSERT OR IGNORE INTO Proceso(PlantaColor,Nombre,Complejidad) VALUES(?,?,?)", _
-                Array As Object(c, "Corte", "Alto"))
-			SQL1.ExecNonQuery2("INSERT OR IGNORE INTO Proceso(PlantaColor,Nombre,Complejidad) VALUES(?,?,?)", _
-                Array As Object(c, "Moldeo", "Medio"))
-		Next
-		SQL1.TransactionSuccessful
-	Catch
-		Log(LastException)
-	End Try
-	SQL1.EndTransaction
+        Dim hex() As String = Array As String( _
+            "#f0f8ff","#faebd7","#00ffff","#7fffd4","#f0ffff", _
+            "#f5f5dc","#ffe4c4","#000000","#ffebcd","#0000ff", _
+            "#8a2be2","#a52a2a","#deb887","#5f9ea0","#7fff00", _
+            "#d2691e","#ff7f50","#6495ed","#fff8dc","#dc143c", _
+            "#00ffff","#00008b","#008b8b","#b8860b","#a9a9a9", _
+            "#006400","#bdb76b","#8b008b","#556b2f","#ff8c00", _
+            "#9932cc","#8b0000","#e9967a","#8fbc8f","#483d8b", _
+            "#2f4f4f","#00ced1","#9400d3","#ff1493","#00bfff", _
+            "#696969","#1e90ff","#b22222","#fffaf0","#228b22", _
+            "#ff00ff","#dcdcdc","#f8f8ff","#ffd700","#daa520" _
+        )
+
+        SQL1.BeginTransaction
+        Try
+                For i = 0 To colores.Length - 1
+                        Dim c As String = colores(i)
+                        Dim h As String = hex(i)
+                        SQL1.ExecNonQuery2("INSERT OR IGNORE INTO Planta(Color,Superficie,HexColor) VALUES(?,?,?)", _
+                                Array As Object(c, 100 + Rnd(0, 901), h))
+                        SQL1.ExecNonQuery2("INSERT OR IGNORE INTO Proceso(PlantaColor,Nombre,Complejidad) VALUES(?,?,?)", _
+                                Array As Object(c, "Corte", "Alto"))
+                        SQL1.ExecNonQuery2("INSERT OR IGNORE INTO Proceso(PlantaColor,Nombre,Complejidad) VALUES(?,?,?)", _
+                                Array As Object(c, "Moldeo", "Medio"))
+                Next
+                SQL1.TransactionSuccessful
+        Catch
+                Log(LastException)
+        End Try
+        SQL1.EndTransaction
 End Sub
 
 
@@ -103,13 +148,16 @@ End Sub
 ' Muestra superficie y lista de procesos para la planta elegida
 Sub MostrarDatos(ColorPlanta As String)
 	' --- Superficie ---
-	Dim rsP As ResultSet = SQL1.ExecQuery2("SELECT Superficie FROM Planta WHERE Color=?", _
-        Array As String(ColorPlanta))
-	If rsP.NextRow Then
-		EtSuperficie.Text = NumberFormat(rsP.GetDouble("Superficie"), 0, 2)
-	Else
-		EtSuperficie.Text = ""
-	End If
+        Dim rsP As ResultSet = SQL1.ExecQuery2("SELECT Superficie, HexColor FROM Planta WHERE Color=?", _
+                Array As String(ColorPlanta))
+        If rsP.NextRow Then
+                EtSuperficie.Text = NumberFormat(rsP.GetDouble("Superficie"), 0, 2)
+                Dim hx As String = rsP.GetString("HexColor")
+                PanelColor.Color = HexToColor(hx)
+        Else
+                EtSuperficie.Text = ""
+                PanelColor.Color = xui.Color_White
+        End If
 	rsP.Close
 
 	' --- Procesos ---
@@ -139,7 +187,14 @@ End Sub
 
 ' Cierra la conexión cuando la página se cierre
 Private Sub B4XPage_CloseRequest As ResumableSub
-	SQL1.Close
-	Return True
+        SQL1.Close
+        Return True
+End Sub
+
+Sub HexToColor(hex As String) As Int
+        If hex.StartsWith("#") Then hex = hex.SubString(1)
+        Dim c As Long = Bit.ParseInt(hex, 16)
+        If hex.Length = 6 Then c = c Or 0xFF000000
+        Return c
 End Sub
 

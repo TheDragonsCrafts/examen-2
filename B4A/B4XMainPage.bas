@@ -194,7 +194,7 @@ End Sub
 Sub HexToColor(hex As String) As Int
         If hex.StartsWith("#") Then hex = hex.SubString(1)
         Dim c As Long = Bit.ParseInt(hex, 16)
-        If hex.Length = 6 Then c = c Or 0xFF000000
+        If hex.Length = 6 Then c = Bit.Or(c, 0xFF000000)
         Return c
 End Sub
 

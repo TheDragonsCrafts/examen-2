@@ -5,7 +5,7 @@ Type=Class
 Version=9.85
 @EndOfDesignText@
 #Region Shared Files
-#CustomBuildAction: folders ready, %WINDIR%\System32\Robocopy.exe,"..\\..\\Shared Files" "..\\Files"
+'#CustomBuildAction: folders ready, %WINDIR%\System32\Robocopy.exe,"..\\..\\Shared Files" "..\\Files" 'JULES: Commented out to prevent build error due to missing Shared Files directory. If these files are needed, ensure C:\Users\301-PC2\Desktop\EXAMEN~1\Shared Files\ exists and contains the required files.
 'Ctrl + click to sync files: ide://run?file=%WINDIR%\System32\Robocopy.exe&args=..\\..\\Shared+Files&args=..\\Files&FilesSync=True
 #End Region
 
@@ -194,7 +194,7 @@ End Sub
 Sub HexToColor(hex As String) As Int
         If hex.StartsWith("#") Then hex = hex.SubString(1)
         Dim c As Long = Bit.ParseInt(hex, 16)
-        If hex.Length = 6 Then c = c Or 0xFF000000
+        If hex.Length = 6 Then c = Bit.Or(c, 0xFF000000)
         Return c
 End Sub
 

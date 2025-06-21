@@ -5,7 +5,7 @@ Type=Class
 Version=9.85
 @EndOfDesignText@
 #Region Shared Files
-#CustomBuildAction: folders ready, %WINDIR%\System32\Robocopy.exe,"..\\..\\Shared Files" "..\\Files"
+'#CustomBuildAction: folders ready, %WINDIR%\System32\Robocopy.exe,"..\\..\\Shared Files" "..\\Files" 'JULES: Commented out to prevent build error due to missing Shared Files directory. If these files are needed, ensure C:\Users\301-PC2\Desktop\EXAMEN~1\Shared Files\ exists and contains the required files.
 'Ctrl + click to sync files: ide://run?file=%WINDIR%\System32\Robocopy.exe&args=..\\..\\Shared+Files&args=..\\Files&FilesSync=True
 #End Region
 
